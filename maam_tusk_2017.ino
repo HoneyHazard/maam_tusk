@@ -1,5 +1,5 @@
 #include "FastLED.h"
-
+ 
 FASTLED_USING_NAMESPACE
 
 // FastLED "100-lines-of-code" demo reel, showing just a few 
@@ -19,10 +19,11 @@ FASTLED_USING_NAMESPACE
 //#define CLK_PIN   4
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
-#define NUM_LEDS    64
+#define NUM_LEDS    49
 CRGB leds[NUM_LEDS];
 
-#define BRIGHTNESS          96
+//#define BRIGHTNESS          96
+#define BRIGHTNESS          40
 #define FRAMES_PER_SECOND  120
 
 void setup() {
@@ -49,7 +50,8 @@ void nextPattern();
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])();
-SimplePatternList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm };
+//SimplePatternList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm };
+SimplePatternList gPatterns = { rainbow, rainbowWithGlitter };
 
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
