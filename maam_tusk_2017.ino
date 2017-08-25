@@ -1,5 +1,8 @@
 #include "FastLED.h"
- 
+
+// !!! uncomment below when running on Ma'aM !!!
+#define TESTING
+
 FASTLED_USING_NAMESPACE
 
 // FastLED "100-lines-of-code" demo reel, showing just a few 
@@ -15,29 +18,32 @@ FASTLED_USING_NAMESPACE
 #warning "Requires FastLED 3.1 or later; check github for latest code."
 #endif
 
+
+#ifndef TESTING
+
+// Actual Ma'aM setup
 #define DATA_PIN    3
-//#define CLK_PIN   4
+#define CLK_PIN     4
+#define LED_TYPE    LPD8806
+#define COLOR_ORDER GRB
+#define NUM_LEDS    300
+
+#else // TESTING
+
+// Sergey's setup for testing
+#define DATA_PIN    3
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
 #define NUM_LEDS    49
+#define BRIGHTNESS  96
+
+#endif // TESTING
+
 CRGB leds[NUM_LEDS];
 
-//#define BRIGHTNESS          96
-#define BRIGHTNESS          40
 #define FRAMES_PER_SECOND  120
 
-void setup() {
-  delay(3000); // 3 second delay for recovery
-  
-  // tell FastLED about the LED strip configuration
-  FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  //FastLED.addLeds<LED_TYPE,DATA_PIN,CLK_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-
-  // set master brightness control
-  FastLED.setBrightness(BRIGHTNESS);
-}
-
-void addGlitter( fract8 chanceOfGlitter);
+void addGlitter(fract8 chanceOfGlitter);
 
 void rainbow();
 void rainbowWithGlitter();
@@ -47,6 +53,25 @@ void juggle();
 void bpm();
 
 void nextPattern();
+
+
+void setup()
+{
+    delay(3000); // 3 second delay for recovery
+  
+    // tell FastLED about the LED strip configuration
+#ifndef TESTING
+    // actual Ma'aM setup used LPD8806, which needs data and clock pins
+    FastLED.addLeds<LED_TYPE,DATA_PIN,CLK_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+#else
+    // Sergey's setup at home only needs the data pin
+    FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+#endif
+
+    // set master brightness control
+    FastLED.setBrightness(BRIGHTNESS);
+}
+
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])();
