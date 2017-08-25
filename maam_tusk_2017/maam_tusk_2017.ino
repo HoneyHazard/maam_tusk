@@ -52,7 +52,6 @@ CRGB * maamColorArray;
 
 // utility functions
 void addGlitter(fract8 chanceOfGlitter);
-void nextPattern();
 void applyFade(size_t i, CRGB rgb, uint8_t fadeFactor);
 // end utility functions
 
