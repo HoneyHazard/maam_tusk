@@ -1,7 +1,7 @@
 #include "FastLED.h"
 
 // *** uncomment below when running on Ma'aM ***
-#define TESTING
+// #define TESTING
 // *** uncomment above when running on Ma'aM ***
 
 #define NEEDS_GREEN_BLUE_GRADIENT_SWAP
@@ -14,6 +14,12 @@ FASTLED_USING_NAMESPACE
 
 // utility #define
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
+
+// how fast are we running??
+#define FRAMES_PER_SECOND  120
+
+#define GRAD_LENGTH 20 // length, in LEDs, of each gradient section
+
 
 #ifndef TESTING
 
@@ -36,12 +42,7 @@ FASTLED_USING_NAMESPACE
 
 #endif // TESTING
 
-// how fast are we running??
-#define FRAMES_PER_SECOND  120
-//#define FRAMES_PER_SECOND  3
-
 // *** Ma'aM Colors Stuff ***
-#define GRAD_LENGTH 20 // length, in LEDs, of each gradient section
 CRGB maamColors[] = { CRGB::Blue, CRGB::Purple, CRGB::Pink, CRGB::White, CRGB::Cyan };
 // CRGB maamColors[] = { CRGB::Blue, RGB::Red, CRGB::Green }; // good for testing.
 const size_t numMaamColors = ARRAY_SIZE(maamColors);
