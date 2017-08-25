@@ -2,9 +2,9 @@ How to get those tusks glowing with new code:
 
 Step 1. Install FastLED. There is a FastLED directory in the root of the repository/zip file. Copy it to your Arduino's user libs folder. 
 
-On Linux it is /home/<username>/Arduino/libraries
-On OSX it is /Users/<username>/Documents/Arduino/libraries
-On Windows it is ...Documents\Arduino\libraries
+- On Linux it is /home/<username>/Arduino/libraries
+- On OSX it is /Users/<username>/Documents/Arduino/libraries
+- On Windows it is ...Documents\Arduino\libraries
 
 Step 2: Configure the basics for right behavior
 
