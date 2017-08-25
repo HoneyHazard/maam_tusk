@@ -167,7 +167,7 @@ void loop()
   }
 
   // change patterns periodically
-  EVERY_N_SECONDS(10) {
+  EVERY_N_SECONDS(11) {
       transitionActive = true;
   }
 
