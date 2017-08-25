@@ -57,6 +57,7 @@ void applyFade(size_t i, CRGB rgb, uint8_t fadeFactor);
 
 // active "mode" functions
 void maamRainbow(uint8_t fadeFactor);
+void maamRainbowCompressed(uint8_t fadeFactor);
 void maamFullGlow(uint8_t fadeFactor);
 // end active "mode" functions
 
@@ -72,7 +73,8 @@ void bpm();
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*FunctionList[])(uint8_t fadeFactor);
 //FunctionList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm };
-FunctionList gPatterns = { maamFullGlow, maamRainbow };
+//FunctionList gPatterns = { maamFullGlow, maamRainbow, maamFullGlow, maamRainbowCompressed };
+FunctionList gPatterns = { maamFullGlow, maamRainbow, maamFullGlow, maamRainbowCompressed };
 const size_t numPatterns = ARRAY_SIZE(gPatterns);
 
 bool transitionActive = false;
@@ -202,6 +204,31 @@ void maamRainbow(uint8_t fadeCounter)
         }
     }
 }
+
+void maamRainbowCompressed(uint8_t fadeCounter)
+{
+    size_t colorIdx = gHue % colorArrayLen;
+    for (size_t i = 0; i < NUM_LEDS; ++i) {
+        uint8_t fadeFraction = fadeCounter >> 2;
+        addRgb(i, maamColorArray[colorIdx], fadeFraction);
+        if (++colorIdx == colorArrayLen) {
+            colorIdx = 0;
+        }
+        addRgb(i, maamColorArray[colorIdx], fadeFraction);
+        if (++colorIdx == colorArrayLen) {
+            colorIdx = 0;
+        }
+        addRgb(i, maamColorArray[colorIdx], fadeFraction);
+        if (++colorIdx == colorArrayLen) {
+            colorIdx = 0;
+        }
+        addRgb(i, maamColorArray[colorIdx], fadeFraction);
+        if (++colorIdx == colorArrayLen) {
+            colorIdx = 0;
+        }
+    }
+}
+
 
 void maamFullGlow(uint8_t fadeCounter)
 {
