@@ -57,6 +57,7 @@ void nextPattern();
 // active "mode" functions
 void maamRainbow();
 void maamRainbowWithGlitter();
+void maamFullGlow();
 // end active "mode" functions
 
 // functions from the 100DemoReel. Kept for reference...
@@ -71,8 +72,9 @@ void bpm();
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])();
 //SimplePatternList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm };
-//SimplePatternList gPatterns = { rainbow, rainbowWithGlitter };
-SimplePatternList gPatterns = { maamRainbow, maamRainbowWithGlitter };
+//SimplePatternList gPatterns = { maamRainbow, maamRainbowWithGlitter };
+SimplePatternList gPatterns = { maamFullGlow };
+bool doGlitter = false;
 
 // the "output" array
 CRGB leds[NUM_LEDS];
@@ -122,27 +124,46 @@ void loop()
   // Call the current pattern function once, updating the 'leds' array
   gPatterns[gCurrentPatternNumber]();
 
+  // lets make glitter independent, and applied on top of the main "modes"
+  if (doGlitter) {
+      addGlitter(80);
+  }
+  
+
   // send the 'leds' array out to the actual LED strip
   FastLED.show();  
   // insert a delay to keep the framerate modest
   FastLED.delay(1000/FRAMES_PER_SECOND); 
 
-  // do some periodic updates
-  EVERY_N_MILLISECONDS( 200 ) { if (++gHue == colorArrayLen) gHue = 0; } // slowly cycle the "base color" through the rainbow
-  EVERY_N_SECONDS( 10 ) { nextPattern(); } // change patterns periodically
+  // gHue is used mostly as a rotating color index
+  EVERY_N_MILLISECONDS(200) {
+      if (++gHue == colorArrayLen) {
+          gHue = 0;
+      }
+  }
+
+  // change patterns periodically
+  EVERY_N_SECONDS(10) {
+      nextPattern();
+  }
+
+  // activate glitter every now and then
+  EVERY_N_SECONDS(13) {
+      doGlitter = (random8() < 100);
+  } 
 }
 
 void nextPattern()
 {
-  // add one to the current pattern number, and wrap around at the end
-  gCurrentPatternNumber = (gCurrentPatternNumber + 1) % ARRAY_SIZE( gPatterns);
+    // add one to the current pattern number, and wrap around at the end
+    gCurrentPatternNumber = (gCurrentPatternNumber + 1) % ARRAY_SIZE( gPatterns);
 }
 
 void addGlitter(fract8 chanceOfGlitter) 
 {
-  if( random8() < chanceOfGlitter) {
-    leds[ random16(NUM_LEDS) ] += CRGB::White;
-  }
+    if( random8() < chanceOfGlitter) {
+        leds[ random16(NUM_LEDS) ] += CRGB::White;
+    }
 }
 
 void maamRainbow()
@@ -160,6 +181,14 @@ void maamRainbowWithGlitter()
 {
     maamRainbow();
     addGlitter(80);
+}
+
+void maamFullGlow()
+{
+    size_t colorIdx = gHue % colorArrayLen;
+    for (size_t i = 0; i < NUM_LEDS; ++i) {
+        leds[i] = maamColorArray[colorIdx];
+    }
 }
 
 // ***************
