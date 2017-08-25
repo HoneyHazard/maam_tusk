@@ -36,7 +36,8 @@ FASTLED_USING_NAMESPACE
 
 CRGB leds[NUM_LEDS];
 
-#define FRAMES_PER_SECOND  120
+// #define FRAMES_PER_SECOND  120
+#define FRAMES_PER_SECOND  3
 
 void addGlitter(fract8 chanceOfGlitter);
 
@@ -57,9 +58,9 @@ void nextPattern();
 // *** Ma'aM Colors Stuff ***
 #define GRAD_LENGTH 10
 //CRGB maamColors[] = { CRGB::Blue, CRGB::Purple, CRGB::Pink, CRGB::White, CRGB::Cyan };
-CRGB maamColors[] = { CRGB::Blue, CRGB::Green, CRGB::White };
+CRGB maamColors[] = { CRGB::Blue, CRGB::Red, CRGB::Green };
 const size_t numMaamColors = ARRAY_SIZE(maamColors);
-const size_t colorArrayLen = GRAD_LENGTH * numMaamColors; //GRAD_LENGTH * (numMaamColors+1);
+const size_t colorArrayLen = GRAD_LENGTH * numMaamColors; 
 CRGB * maamColorArray;
 // *** End Ma'aM Colors Stuff ***
 
@@ -73,9 +74,9 @@ void setup()
         }
         uint16_t startPos = i * GRAD_LENGTH;
         CRGB startColor = maamColors[i];
-        startColor = CRGB(startColor.r, startColor.b, startColor.g); // correct it!
+        startColor = CRGB(startColor.r, startColor.b, startColor.g); // correct it?!
         CRGB endColor = maamColors[iNext];
-        endColor = CRGB(endColor.r, endColor.b, endColor.g); // correct it!!!
+        endColor = CRGB(endColor.r, endColor.b, endColor.g); // correct it?!
         fill_gradient_RGB(maamColorArray,
                           startPos, startColor,
                           startPos + GRAD_LENGTH-1, endColor);
@@ -143,15 +144,29 @@ void maamRainbow()
 {
     //fill_gradient(leds, NUM_LEDS, CRGB::Blue, CRGB::Cyan);
     //fill_gradient<CRGB>(leds, NUM_LEDS, CRGB(255, 255, 0), CRGB(255, 0, 0));
-    fill_solid(leds, NUM_LEDS, CRGB::Red);
+    //fill_solid(leds, NUM_LEDS, CRGB::Red);
     //fill_gradient<CRGB>(leds, NUM_LEDS, CRGB(0,0,255), 10, CRGB(255,0,255));
     //fill_gradient_RGB(leds, NUM_LEDS, CGRB::Blue, CRGB(100,255,255), FORWARD_HUES);
     //fill_gradient_RGB(leds, 0, CRGB::Blue, 20, CRGB::Red);
-    for (size_t i = 0; i < 20; ++i) {
-                leds[i] = maamColorArray[i];
-    }
-
     
+    size_t start = gHue % NUM_LEDS;
+    //size_t start = 0;
+    size_t i = start;
+    int colorIdx = 0;
+    do {
+        leds[i] = maamColorArray[(size_t)colorIdx];
+        if (++colorIdx == colorArrayLen) {
+            colorIdx = 0;
+        }
+        if (++i == NUM_LEDS) {
+            i = 0;
+            colorIdx = colorArrayLen-1 - start;
+            while (colorIdx < 0) {
+                colorIdx += colorArrayLen;
+            }
+        }                
+    } while (i != start);
+    Serial.println(start);
 }
 
 
