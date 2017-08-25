@@ -69,12 +69,16 @@ void juggle();
 void bpm();
 // end not used "mode" functions
 
+enum MetaState { Pattern, FadeOut, FadeIn };
+
 // List of patterns to cycle through.  Each is defined as a separate function below.
-typedef void (*SimplePatternList[])();
-//SimplePatternList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm };
-//SimplePatternList gPatterns = { maamRainbow, maamRainbowWithGlitter };
-SimplePatternList gPatterns = { maamFullGlow };
+typedef void (*FunctionList[])();
+//FunctionList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm };
+FunctionList gPatterns = { maamFullGlow, maamRainbow };
+MetaState metaState = FadeIn;
+
 bool doGlitter = false;
+
 
 // the "output" array
 CRGB leds[NUM_LEDS];
