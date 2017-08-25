@@ -18,9 +18,6 @@ FASTLED_USING_NAMESPACE
 // how fast are we running??
 #define FRAMES_PER_SECOND  120
 
-#define GRAD_LENGTH 20 // length, in LEDs, of each gradient section
-
-
 #ifndef TESTING
 
 // Ma'aM configuration
@@ -30,6 +27,7 @@ FASTLED_USING_NAMESPACE
 #define COLOR_ORDER RGB
 #define NUM_LEDS    300
 #define BRIGHTNESS  96
+#define GRAD_LENGTH 60 // length, in LEDs, of each gradient section
 
 #else
 
@@ -39,6 +37,7 @@ FASTLED_USING_NAMESPACE
 #define COLOR_ORDER RGB
 #define NUM_LEDS    49
 #define BRIGHTNESS  40
+#define GRAD_LENGTH 20 // length, in LEDs, of each gradient section
 
 #endif // TESTING
 
