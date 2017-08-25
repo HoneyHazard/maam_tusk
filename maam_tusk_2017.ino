@@ -4,6 +4,8 @@
 #define TESTING
 // *** uncomment above when running on Ma'aM ***
 
+#define NEEDS_GREEN_BLUE_GRADIENT_SWAP
+
 FASTLED_USING_NAMESPACE
 
 #if defined(FASTLED_VERSION) && (FASTLED_VERSION < 3001000)
@@ -34,35 +36,46 @@ FASTLED_USING_NAMESPACE
 
 #endif // TESTING
 
-CRGB leds[NUM_LEDS];
-
- #define FRAMES_PER_SECOND  120
+// how fast are we running??
+#define FRAMES_PER_SECOND  120
 //#define FRAMES_PER_SECOND  3
 
+// *** Ma'aM Colors Stuff ***
+#define GRAD_LENGTH 20 // length, in LEDs, of each gradient section
+CRGB maamColors[] = { CRGB::Blue, CRGB::Purple, CRGB::Pink, CRGB::White, CRGB::Cyan };
+// CRGB maamColors[] = { CRGB::Blue, RGB::Red, CRGB::Green }; // good for testing.
+const size_t numMaamColors = ARRAY_SIZE(maamColors);
+const size_t colorArrayLen = GRAD_LENGTH * numMaamColors; 
+CRGB * maamColorArray;
+// *** End Ma'aM Colors Stuff ***
+
+// utility functions
 void addGlitter(fract8 chanceOfGlitter);
+void nextPattern();
+// end utility functions
 
+// active "mode" functions
 void maamRainbow();
+void maamRainbowWithGlitter();
+// end active "mode" functions
 
-
-// not used:
+// functions from the 100DemoReel. Kept for reference...
 void rainbow();
 void rainbowWithGlitter();
 void confetti();
 void sinelon();
 void juggle();
 void bpm();
-// end not used
+// end not used "mode" functions
 
-void nextPattern();
+// List of patterns to cycle through.  Each is defined as a separate function below.
+typedef void (*SimplePatternList[])();
+//SimplePatternList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm };
+//SimplePatternList gPatterns = { rainbow, rainbowWithGlitter };
+SimplePatternList gPatterns = { maamRainbow, maamRainbowWithGlitter };
 
-// *** Ma'aM Colors Stuff ***
-#define GRAD_LENGTH 20
-CRGB maamColors[] = { CRGB::Blue, CRGB::Purple, CRGB::Pink, CRGB::White, CRGB::Cyan };
-//CRGB maamColors[] = { CRGB::Blue, RGB::Red, CRGB::Green };
-const size_t numMaamColors = ARRAY_SIZE(maamColors);
-const size_t colorArrayLen = GRAD_LENGTH * numMaamColors; 
-CRGB * maamColorArray;
-// *** End Ma'aM Colors Stuff ***
+// the "output" array
+CRGB leds[NUM_LEDS];
 
 void setup()
 {
@@ -74,18 +87,16 @@ void setup()
         }
         uint16_t startPos = i * GRAD_LENGTH;
         CRGB startColor = maamColors[i];
-        startColor = CRGB(startColor.r, startColor.b, startColor.g); // correct it?!
         CRGB endColor = maamColors[iNext];
+#ifdef NEEDS_GREEN_BLUE_GRADIENT_SWAP
         endColor = CRGB(endColor.r, endColor.b, endColor.g); // correct it?!
+        startColor = CRGB(startColor.r, startColor.b, startColor.g); // correct it?!
+#endif
         fill_gradient_RGB(maamColorArray,
                           startPos, startColor,
                           startPos + GRAD_LENGTH-1, endColor);
                           
     }
-    //fill_gradient_RGB(maamColorArray, 0, CRGB::Green, colorArrayLen-1, CRGB::Blue);
-    //fill_solid(maamColorArray, colorArrayLen, CRGB::Green);
-    
-    // setup MaaM color array 
     
     delay(3000); // 3 second delay for recovery
   
@@ -103,11 +114,6 @@ void setup()
 }
 
 
-// List of patterns to cycle through.  Each is defined as a separate function below.
-typedef void (*SimplePatternList[])();
-//SimplePatternList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm };
-//SimplePatternList gPatterns = { rainbow, rainbowWithGlitter };
-SimplePatternList gPatterns = { maamRainbow };
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
   
@@ -132,23 +138,15 @@ void nextPattern()
   gCurrentPatternNumber = (gCurrentPatternNumber + 1) % ARRAY_SIZE( gPatterns);
 }
 
-void addGlitter( fract8 chanceOfGlitter) 
+void addGlitter(fract8 chanceOfGlitter) 
 {
   if( random8() < chanceOfGlitter) {
     leds[ random16(NUM_LEDS) ] += CRGB::White;
   }
 }
 
-
 void maamRainbow()
 {
-    //fill_gradient(leds, NUM_LEDS, CRGB::Blue, CRGB::Cyan);
-    //fill_gradient<CRGB>(leds, NUM_LEDS, CRGB(255, 255, 0), CRGB(255, 0, 0));
-    //fill_solid(leds, NUM_LEDS, CRGB::Red);
-    //fill_gradient<CRGB>(leds, NUM_LEDS, CRGB(0,0,255), 10, CRGB(255,0,255));
-    //fill_gradient_RGB(leds, NUM_LEDS, CGRB::Blue, CRGB(100,255,255), FORWARD_HUES);
-    //fill_gradient_RGB(leds, 0, CRGB::Blue, 20, CRGB::Red);
-
     size_t colorIdx = gHue % colorArrayLen;
     for (size_t i = 0; i < NUM_LEDS; ++i) {
         leds[i] = maamColorArray[colorIdx];
@@ -156,38 +154,17 @@ void maamRainbow()
             colorIdx = 0;
         }
     }
-
-    /*
-    size_t start = gHue % colorArrayLen;
-    //size_t start = 0;
-    size_t i = start;
-    int colorIdx = 0;
-    do {
-        leds[i] = maamColorArray[(size_t)colorIdx];
-        if (++colorIdx == colorArrayLen) {
-            colorIdx = 0;
-        }
-        if (++i == NUM_LEDS) {
-            i = 0;
-            colorIdx = colorArrayLen-1 - start;
-            while (colorIdx < 0) {
-                colorIdx += colorArrayLen;
-            }
-        }                
-    } while (i != start);
-    Serial.println(start);
-    */
 }
 
+void maamRainbowWithGlitter()
+{
+    maamRainbow();
+    addGlitter(80);
+}
 
 // ***************
 
-
-
-
-
-
-// *** The rest are not used; just kept here for reference ***
+// *** The rest are not actively used; just kept here for reference ***
 
 // FastLED "100-lines-of-code" demo reel, showing just a few 
 // of the kinds of animation patterns you can quickly and easily 
