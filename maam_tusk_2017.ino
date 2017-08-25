@@ -21,21 +21,22 @@ FASTLED_USING_NAMESPACE
 
 #ifndef TESTING
 
-// Actual Ma'aM setup
+// Ma'aM configuration
 #define DATA_PIN    3
 #define CLK_PIN     4
 #define LED_TYPE    LPD8806
 #define COLOR_ORDER GRB
 #define NUM_LEDS    300
+#define BRIGHTNESS  96
 
-#else // TESTING
+#else
 
 // Sergey's setup for testing
 #define DATA_PIN    3
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
 #define NUM_LEDS    49
-#define BRIGHTNESS  96
+#define BRIGHTNESS  40
 
 #endif // TESTING
 
@@ -45,15 +46,16 @@ CRGB leds[NUM_LEDS];
 
 void addGlitter(fract8 chanceOfGlitter);
 
+// not used:
 void rainbow();
 void rainbowWithGlitter();
 void confetti();
 void sinelon();
 void juggle();
 void bpm();
+// end not used
 
 void nextPattern();
-
 
 void setup()
 {
@@ -104,6 +106,15 @@ void nextPattern()
   gCurrentPatternNumber = (gCurrentPatternNumber + 1) % ARRAY_SIZE( gPatterns);
 }
 
+void addGlitter( fract8 chanceOfGlitter) 
+{
+  if( random8() < chanceOfGlitter) {
+    leds[ random16(NUM_LEDS) ] += CRGB::White;
+  }
+}
+
+// the rest are not used; just kept here for now for reference
+
 void rainbow() 
 {
   // FastLED's built-in rainbow generator
@@ -117,12 +128,6 @@ void rainbowWithGlitter()
   addGlitter(80);
 }
 
-void addGlitter( fract8 chanceOfGlitter) 
-{
-  if( random8() < chanceOfGlitter) {
-    leds[ random16(NUM_LEDS) ] += CRGB::White;
-  }
-}
 
 void confetti() 
 {
@@ -151,7 +156,8 @@ void bpm()
   }
 }
 
-void juggle() {
+void juggle()
+{
   // eight colored dots, weaving in and out of sync with each other
   fadeToBlackBy( leds, NUM_LEDS, 20);
   byte dothue = 0;
