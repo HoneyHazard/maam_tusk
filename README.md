@@ -19,7 +19,7 @@ Step 3: Knock on wood, compile and upload
 Step 4: Tweak to achieve the behavior
 
 - Change "#define FRAMES_PER_SECOND ..." on line 26 to change how fast everything flows
-- Change "#define GRAD_LENGTH ..." on line 20 to have longer vs shorter gradients (and, conserquently, how dense they get pacled)
+- Change "#define GRAD_LENGTH ..." on line 30 to have longer vs shorter gradients (and, conserquently, how dense they get pacled)
 - Change "#define BRIGHTNESS" on line 16 to tweak the brightness brightness
 
 
