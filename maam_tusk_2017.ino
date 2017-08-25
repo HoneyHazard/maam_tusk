@@ -36,8 +36,8 @@ FASTLED_USING_NAMESPACE
 
 CRGB leds[NUM_LEDS];
 
-// #define FRAMES_PER_SECOND  120
-#define FRAMES_PER_SECOND  3
+ #define FRAMES_PER_SECOND  120
+//#define FRAMES_PER_SECOND  3
 
 void addGlitter(fract8 chanceOfGlitter);
 
@@ -56,9 +56,9 @@ void bpm();
 void nextPattern();
 
 // *** Ma'aM Colors Stuff ***
-#define GRAD_LENGTH 10
-//CRGB maamColors[] = { CRGB::Blue, CRGB::Purple, CRGB::Pink, CRGB::White, CRGB::Cyan };
-CRGB maamColors[] = { CRGB::Blue, CRGB::Red, CRGB::Green };
+#define GRAD_LENGTH 20
+CRGB maamColors[] = { CRGB::Blue, CRGB::Purple, CRGB::Pink, CRGB::White, CRGB::Cyan };
+//CRGB maamColors[] = { CRGB::Blue, RGB::Red, CRGB::Green };
 const size_t numMaamColors = ARRAY_SIZE(maamColors);
 const size_t colorArrayLen = GRAD_LENGTH * numMaamColors; 
 CRGB * maamColorArray;
@@ -122,7 +122,7 @@ void loop()
   FastLED.delay(1000/FRAMES_PER_SECOND); 
 
   // do some periodic updates
-  EVERY_N_MILLISECONDS( 20 ) { gHue++; } // slowly cycle the "base color" through the rainbow
+  EVERY_N_MILLISECONDS( 200 ) { if (++gHue == colorArrayLen) gHue = 0; } // slowly cycle the "base color" through the rainbow
   EVERY_N_SECONDS( 10 ) { nextPattern(); } // change patterns periodically
 }
 
@@ -148,8 +148,17 @@ void maamRainbow()
     //fill_gradient<CRGB>(leds, NUM_LEDS, CRGB(0,0,255), 10, CRGB(255,0,255));
     //fill_gradient_RGB(leds, NUM_LEDS, CGRB::Blue, CRGB(100,255,255), FORWARD_HUES);
     //fill_gradient_RGB(leds, 0, CRGB::Blue, 20, CRGB::Red);
-    
-    size_t start = gHue % NUM_LEDS;
+
+    size_t colorIdx = gHue % colorArrayLen;
+    for (size_t i = 0; i < NUM_LEDS; ++i) {
+        leds[i] = maamColorArray[colorIdx];
+        if (++colorIdx == colorArrayLen) {
+            colorIdx = 0;
+        }
+    }
+
+    /*
+    size_t start = gHue % colorArrayLen;
     //size_t start = 0;
     size_t i = start;
     int colorIdx = 0;
@@ -167,6 +176,7 @@ void maamRainbow()
         }                
     } while (i != start);
     Serial.println(start);
+    */
 }
 
 
