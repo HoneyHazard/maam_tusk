@@ -1,23 +1,17 @@
 #include "FastLED.h"
 
-// !!! uncomment below when running on Ma'aM !!!
+// *** uncomment below when running on Ma'aM ***
 #define TESTING
+// *** uncomment above when running on Ma'aM ***
 
 FASTLED_USING_NAMESPACE
-
-// FastLED "100-lines-of-code" demo reel, showing just a few 
-// of the kinds of animation patterns you can quickly and easily 
-// compose using FastLED.  
-//
-// This example also shows one easy way to define multiple 
-// animations patterns and have them automatically rotate.
-//
-// -Mark Kriegsman, December 2014
 
 #if defined(FASTLED_VERSION) && (FASTLED_VERSION < 3001000)
 #warning "Requires FastLED 3.1 or later; check github for latest code."
 #endif
 
+// utility #define
+#define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
 #ifndef TESTING
 
@@ -25,7 +19,7 @@ FASTLED_USING_NAMESPACE
 #define DATA_PIN    3
 #define CLK_PIN     4
 #define LED_TYPE    LPD8806
-#define COLOR_ORDER GRB
+#define COLOR_ORDER RGB
 #define NUM_LEDS    300
 #define BRIGHTNESS  96
 
@@ -34,7 +28,7 @@ FASTLED_USING_NAMESPACE
 // Sergey's setup for testing
 #define DATA_PIN    3
 #define LED_TYPE    WS2811
-#define COLOR_ORDER GRB
+#define COLOR_ORDER RGB
 #define NUM_LEDS    49
 #define BRIGHTNESS  40
 
@@ -45,6 +39,9 @@ CRGB leds[NUM_LEDS];
 #define FRAMES_PER_SECOND  120
 
 void addGlitter(fract8 chanceOfGlitter);
+
+void maamRainbow();
+
 
 // not used:
 void rainbow();
@@ -57,8 +54,38 @@ void bpm();
 
 void nextPattern();
 
+// *** Ma'aM Colors Stuff ***
+#define GRAD_LENGTH 10
+//CRGB maamColors[] = { CRGB::Blue, CRGB::Purple, CRGB::Pink, CRGB::White, CRGB::Cyan };
+CRGB maamColors[] = { CRGB::Blue, CRGB::Green, CRGB::White };
+const size_t numMaamColors = ARRAY_SIZE(maamColors);
+const size_t colorArrayLen = GRAD_LENGTH * numMaamColors; //GRAD_LENGTH * (numMaamColors+1);
+CRGB * maamColorArray;
+// *** End Ma'aM Colors Stuff ***
+
 void setup()
 {
+    maamColorArray = new CRGB[colorArrayLen];
+    for (uint16_t i = 0; i < numMaamColors; ++i) {
+        uint16_t iNext = i + 1;
+        if (iNext == numMaamColors) {
+            iNext = 0;
+        }
+        uint16_t startPos = i * GRAD_LENGTH;
+        CRGB startColor = maamColors[i];
+        startColor = CRGB(startColor.r, startColor.b, startColor.g); // correct it!
+        CRGB endColor = maamColors[iNext];
+        endColor = CRGB(endColor.r, endColor.b, endColor.g); // correct it!!!
+        fill_gradient_RGB(maamColorArray,
+                          startPos, startColor,
+                          startPos + GRAD_LENGTH-1, endColor);
+                          
+    }
+    //fill_gradient_RGB(maamColorArray, 0, CRGB::Green, colorArrayLen-1, CRGB::Blue);
+    //fill_solid(maamColorArray, colorArrayLen, CRGB::Green);
+    
+    // setup MaaM color array 
+    
     delay(3000); // 3 second delay for recovery
   
     // tell FastLED about the LED strip configuration
@@ -78,8 +105,8 @@ void setup()
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])();
 //SimplePatternList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm };
-SimplePatternList gPatterns = { rainbow, rainbowWithGlitter };
-
+//SimplePatternList gPatterns = { rainbow, rainbowWithGlitter };
+SimplePatternList gPatterns = { maamRainbow };
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
   
@@ -98,8 +125,6 @@ void loop()
   EVERY_N_SECONDS( 10 ) { nextPattern(); } // change patterns periodically
 }
 
-#define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
-
 void nextPattern()
 {
   // add one to the current pattern number, and wrap around at the end
@@ -113,7 +138,41 @@ void addGlitter( fract8 chanceOfGlitter)
   }
 }
 
-// the rest are not used; just kept here for now for reference
+
+void maamRainbow()
+{
+    //fill_gradient(leds, NUM_LEDS, CRGB::Blue, CRGB::Cyan);
+    //fill_gradient<CRGB>(leds, NUM_LEDS, CRGB(255, 255, 0), CRGB(255, 0, 0));
+    fill_solid(leds, NUM_LEDS, CRGB::Red);
+    //fill_gradient<CRGB>(leds, NUM_LEDS, CRGB(0,0,255), 10, CRGB(255,0,255));
+    //fill_gradient_RGB(leds, NUM_LEDS, CGRB::Blue, CRGB(100,255,255), FORWARD_HUES);
+    //fill_gradient_RGB(leds, 0, CRGB::Blue, 20, CRGB::Red);
+    for (size_t i = 0; i < 20; ++i) {
+                leds[i] = maamColorArray[i];
+    }
+
+    
+}
+
+
+// ***************
+
+
+
+
+
+
+// *** The rest are not used; just kept here for reference ***
+
+// FastLED "100-lines-of-code" demo reel, showing just a few 
+// of the kinds of animation patterns you can quickly and easily 
+// compose using FastLED.  
+//
+// This example also shows one easy way to define multiple 
+// animations patterns and have them automatically rotate.
+//
+// -Mark Kriegsman, December 2014
+
 
 void rainbow() 
 {
