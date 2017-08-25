@@ -52,12 +52,12 @@ CRGB * maamColorArray;
 // utility functions
 void addGlitter(fract8 chanceOfGlitter);
 void nextPattern();
+void applyFade(size_t i, CRGB rgb, uint8_t fadeFactor);
 // end utility functions
 
 // active "mode" functions
-void maamRainbow();
-void maamRainbowWithGlitter();
-void maamFullGlow();
+void maamRainbow(uint8_t fadeFactor);
+void maamFullGlow(uint8_t fadeFactor);
 // end active "mode" functions
 
 // functions from the 100DemoReel. Kept for reference...
@@ -69,14 +69,14 @@ void juggle();
 void bpm();
 // end not used "mode" functions
 
-enum MetaState { Pattern, FadeOut, FadeIn };
-
 // List of patterns to cycle through.  Each is defined as a separate function below.
-typedef void (*FunctionList[])();
+typedef void (*FunctionList[])(uint8_t fadeFactor);
 //FunctionList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm };
 FunctionList gPatterns = { maamFullGlow, maamRainbow };
-MetaState metaState = FadeIn;
+const size_t numPatterns = ARRAY_SIZE(gPatterns);
 
+bool transitionActive = false;
+uint8_t fadeCounter = 0; 
 bool doGlitter = false;
 
 
@@ -125,15 +125,34 @@ uint8_t gHue = 0; // rotating "base color" used by many of the patterns
   
 void loop()
 {
-  // Call the current pattern function once, updating the 'leds' array
-  gPatterns[gCurrentPatternNumber]();
+    // start empty
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    
+    if (transitionActive) {
+        // change is coming... use weighted transition ratios
+        uint8_t nextPatternNumber = gCurrentPatternNumber + 1;
+        if (nextPatternNumber == numPatterns) {
+            nextPatternNumber = 0;
+        }
+        gPatterns[gCurrentPatternNumber](255-fadeCounter);
+        gPatterns[nextPatternNumber](fadeCounter);
+        ++fadeCounter;
+        if (fadeCounter == 0) { // 256 and rolled over...
+            transitionActive = false;
+            gCurrentPatternNumber = nextPatternNumber;
+        }        
+    } else {
+        // business as usual
+        // Call the current pattern function once, updating the 'leds' array        
+        gPatterns[gCurrentPatternNumber](255);
+    }
+    
 
   // lets make glitter independent, and applied on top of the main "modes"
   if (doGlitter) {
       addGlitter(80);
   }
   
-
   // send the 'leds' array out to the actual LED strip
   FastLED.show();  
   // insert a delay to keep the framerate modest
@@ -148,19 +167,13 @@ void loop()
 
   // change patterns periodically
   EVERY_N_SECONDS(10) {
-      nextPattern();
+      transitionActive = true;
   }
 
   // activate glitter every now and then
   EVERY_N_SECONDS(13) {
       doGlitter = (random8() < 100);
   } 
-}
-
-void nextPattern()
-{
-    // add one to the current pattern number, and wrap around at the end
-    gCurrentPatternNumber = (gCurrentPatternNumber + 1) % ARRAY_SIZE( gPatterns);
 }
 
 void addGlitter(fract8 chanceOfGlitter) 
@@ -170,28 +183,31 @@ void addGlitter(fract8 chanceOfGlitter)
     }
 }
 
-void maamRainbow()
+void addRgb(size_t i, CRGB rgb, uint8_t fadeFactor)
+{
+    uint8_t r = ((uint16_t)rgb.r * fadeFactor) >> 8;
+    uint8_t g = ((uint16_t)rgb.g * fadeFactor) >> 8;
+    uint8_t b = ((uint16_t)rgb.b * fadeFactor) >> 8;
+    leds[i] += CRGB(r, g, b);
+}
+
+
+void maamRainbow(uint8_t fadeCounter)
 {
     size_t colorIdx = gHue % colorArrayLen;
     for (size_t i = 0; i < NUM_LEDS; ++i) {
-        leds[i] = maamColorArray[colorIdx];
+        addRgb(i, maamColorArray[colorIdx], fadeCounter);        
         if (++colorIdx == colorArrayLen) {
             colorIdx = 0;
         }
     }
 }
 
-void maamRainbowWithGlitter()
-{
-    maamRainbow();
-    addGlitter(80);
-}
-
-void maamFullGlow()
+void maamFullGlow(uint8_t fadeCounter)
 {
     size_t colorIdx = gHue % colorArrayLen;
     for (size_t i = 0; i < NUM_LEDS; ++i) {
-        leds[i] = maamColorArray[colorIdx];
+        addRgb(i, maamColorArray[colorIdx], fadeCounter);        
     }
 }
 
