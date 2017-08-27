@@ -16,7 +16,8 @@ FASTLED_USING_NAMESPACE
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
 // how fast are we running??
-#define FRAMES_PER_SECOND  120
+#define FRAMES_PER_SECOND  200
+//#define FRAMES_PER_SECOND  12
 
 #ifndef TESTING
 
@@ -26,8 +27,9 @@ FASTLED_USING_NAMESPACE
 #define LED_TYPE    LPD8806
 #define COLOR_ORDER RGB
 #define NUM_LEDS    300
+
 #define BRIGHTNESS  96
-#define GRAD_LENGTH 60 // length, in LEDs, of each gradient section
+#define GRAD_SCALE_FACTOR 3
 
 #else
 
@@ -36,23 +38,21 @@ FASTLED_USING_NAMESPACE
 #define LED_TYPE    WS2811
 #define COLOR_ORDER RGB
 #define NUM_LEDS    49
-#define BRIGHTNESS  40
-#define GRAD_LENGTH 20 // length, in LEDs, of each gradient section
+
+#define BRIGHTNESS  10
+#define GRAD_SCALE_FACTOR 1
 
 #endif // TESTING
 
+#define GRAD_LENGTH (20 * GRAD_SCALE_FACTOR) // length, in LEDs, of each gradient section
+
 // *** Ma'aM Colors Stuff ***
 CRGB maamColors[] = { CRGB::Blue, CRGB::Purple, CRGB::Pink, CRGB::White, CRGB::Cyan };
-// CRGB maamColors[] = { CRGB::Blue, RGB::Red, CRGB::Green }; // good for testing.
+//CRGB maamColors[] = { CRGB::Blue, CRGB::Red, CRGB::Green }; // good for testing.
 const size_t numMaamColors = ARRAY_SIZE(maamColors);
 const size_t colorArrayLen = GRAD_LENGTH * numMaamColors; 
 CRGB * maamColorArray;
 // *** End Ma'aM Colors Stuff ***
-
-// utility functions
-void addGlitter(fract8 chanceOfGlitter);
-void applyFade(size_t i, CRGB rgb, uint8_t fadeFactor);
-// end utility functions
 
 // active "mode" functions
 void maamRainbow(uint8_t fadeFactor);
@@ -72,7 +72,6 @@ void bpm();
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*FunctionList[])(uint8_t fadeFactor);
 //FunctionList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm };
-//FunctionList gPatterns = { maamFullGlow, maamRainbow, maamFullGlow, maamRainbowCompressed };
 FunctionList gPatterns = { maamFullGlow, maamRainbow, maamFullGlow, maamRainbowCompressed };
 const size_t numPatterns = ARRAY_SIZE(gPatterns);
 
@@ -122,8 +121,13 @@ void setup()
 
 
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
-uint8_t gHue = 0; // rotating "base color" used by many of the patterns
-  
+uint16_t gHue = 0; // rotating "base color" used by many of the patterns
+
+// utility functions
+void addGlitter(fract8 chanceOfGlitter);
+void applyFade(size_t i, CRGB rgb, uint8_t fadeFactor);
+// end utility functions
+
 void loop()
 {
     // start empty
@@ -161,14 +165,23 @@ void loop()
 
   // gHue is used mostly as a rotating color index
   EVERY_N_MILLISECONDS(200) {
-      if (++gHue == colorArrayLen) {
-          gHue = 0;
+      if (gPatterns[gCurrentPatternNumber] == maamFullGlow) {
+          gHue += GRAD_SCALE_FACTOR;
+      } else {
+          ++gHue;
       }
+
+      if (gHue >= colorArrayLen) {
+          gHue -= colorArrayLen;
+      }
+
   }
 
-  // change patterns periodically
+  // change patterns periodically, with some chance
   EVERY_N_SECONDS(11) {
-      transitionActive = true;
+      if (random8() < 128) {
+          transitionActive = true;
+      }
   }
 
   // activate glitter every now and then
