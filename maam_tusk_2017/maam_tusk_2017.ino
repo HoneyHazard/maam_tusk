@@ -1,7 +1,7 @@
 #include "FastLED.h"
 
 // *** uncomment below when running on Ma'aM ***
-// #define TESTING
+#define TESTING
 // *** uncomment above when running on Ma'aM ***
 
 #define NEEDS_GREEN_BLUE_GRADIENT_SWAP
@@ -79,6 +79,44 @@ bool transitionActive = false;
 uint8_t fadeCounter = 0; 
 bool doGlitter = false;
 
+#define MAX_COLOR_SPOTS 5
+struct SpotInfo
+{
+    int16_t pos;
+    int16_t radius;
+    int16_t vel;   
+    CRGB color;
+    uint8_t fadeFactor;
+} gColorSpots[MAX_COLOR_SPOTS];
+uint8_t numColorSpots = 0;
+
+void addSpot()
+{
+    if (numColorSpots > MAX_COLOR_SPOTS) {
+        // cannot handle any more color spots ;_;
+        return;
+    }
+    
+    // test a hue spot
+    SpotInfo spot;
+    spot.pos = 0;
+    spot.vel = 1;
+    spot.radius = 5;
+    spot.color = CRGB::Red;
+    spot.fadeFactor = 0;
+    gColorSpots[num] = spot;
+    numColorSpots = 1;
+}
+
+void removeColorSpot(uint8_t index)
+{
+    --numColorSpots;
+    // shift all left...
+    
+    for (uint8_t i = index; i < numColorSpots; ++i) {
+        gColorSpots[i] = gColorSpots[i+1];
+    }
+}
 
 // the "output" array
 CRGB leds[NUM_LEDS];
@@ -117,6 +155,8 @@ void setup()
 
     // set master brightness control
     FastLED.setBrightness(BRIGHTNESS);
+
+    addSpot();
 }
 
 
@@ -126,12 +166,15 @@ uint16_t gHue = 0; // rotating "base color" used by many of the patterns
 // utility functions
 void addGlitter(fract8 chanceOfGlitter);
 void applyFade(size_t i, CRGB rgb, uint8_t fadeFactor);
+void applySpot(const SpotInfo &spot);
 // end utility functions
 
 void loop()
 {
     // start empty
     fill_solid(leds, NUM_LEDS, CRGB::Black);
+
+    CHSV test = rgb2hsv_approximate(CRGB::Blue);
     
     if (transitionActive) {
         // change is coming... use weighted transition ratios
@@ -157,6 +200,11 @@ void loop()
   if (doGlitter) {
       addGlitter(80);
   }
+
+  // apply hue spots
+  for (size_t i = 0; i < numColorSpots; ++i) {
+      applySpot(gColorSpots[i]);
+  }   
   
   // send the 'leds' array out to the actual LED strip
   FastLED.show();  
@@ -174,7 +222,17 @@ void loop()
       if (gHue >= colorArrayLen) {
           gHue -= colorArrayLen;
       }
+  }
 
+  EVERY_N_MILLISECONDS(577) {
+      // hue spots
+      for (size_t i = 0; i < numColorSpots; ++i) {
+          SpotInfo &si = gColorSpots[i];
+          si.pos += si.vel * GRAD_SCALE_FACTOR;
+          if (si.pos < 0 || si.pos >= NUM_LEDS) {
+              si.vel = -si.vel;
+          }
+      }
   }
 
   // change patterns periodically, with some chance
@@ -187,13 +245,39 @@ void loop()
   // activate glitter every now and then
   EVERY_N_SECONDS(13) {
       doGlitter = (random8() < 100);
-  } 
+  }
+
 }
 
 void addGlitter(fract8 chanceOfGlitter) 
 {
     if( random8() < chanceOfGlitter) {
         leds[ random16(NUM_LEDS) ] += CRGB::White;
+    }
+}
+
+void applySpot(const SpotInfo &spot)
+{
+    for (int16_t i = -spot.radius; i <= spot.radius; ++i) {        
+        int16_t idx = spot.pos + i;
+        if (idx < 0) {
+            continue;
+        } else if (idx >= NUM_LEDS) {
+            continue;
+        }
+        
+#if false
+        CHSV hsv = rgb2hsv_approximate(leds[(size_t)idx]);
+        hsv.hue += spot.hueDeltaMax * ((uint16_t)(spot.radius - abs(i)) * 255)/spot.radius/256; 
+        CRGB rgb;
+        hsv2rgb_raw(hsv, rgb);
+#endif
+        CRGB rgb = leds[(size_t)idx];
+        rgb.g = 255;
+        leds[(size_t)idx] = CRGB::Blue;//rgb;
+
+        //hsv2rgb_spectrum(color, leds[(size_t)idx]);
+        //ds[(size_t)idx] = CRGB::Blue;
     }
 }
 
