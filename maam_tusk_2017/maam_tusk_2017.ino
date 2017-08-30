@@ -16,7 +16,7 @@ FASTLED_USING_NAMESPACE
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
 // how fast are we running??
-#define FRAMES_PER_SECOND  200
+#define FRAMES_PER_SECOND  150
 //#define FRAMES_PER_SECOND  12
 
 #ifndef TESTING
@@ -99,13 +99,13 @@ void addSpot()
     
     // test a hue spot
     SpotInfo spot;
-    spot.pos = 0;
+    spot.pos = 10;
     spot.vel = 1;
-    spot.radius = 5;
+    spot.radius = 7;
     spot.color = CRGB::Red;
     spot.fadeFactor = 0;
-    gColorSpots[num] = spot;
-    numColorSpots = 1;
+    gColorSpots[numColorSpots] = spot;
+    ++numColorSpots;
 }
 
 void removeColorSpot(uint8_t index)
@@ -173,9 +173,7 @@ void loop()
 {
     // start empty
     fill_solid(leds, NUM_LEDS, CRGB::Black);
-
-    CHSV test = rgb2hsv_approximate(CRGB::Blue);
-    
+   
     if (transitionActive) {
         // change is coming... use weighted transition ratios
         uint8_t nextPatternNumber = gCurrentPatternNumber + 1;
@@ -258,26 +256,37 @@ void addGlitter(fract8 chanceOfGlitter)
 
 void applySpot(const SpotInfo &spot)
 {
-    for (int16_t i = -spot.radius; i <= spot.radius; ++i) {        
-        int16_t idx = spot.pos + i;
-        if (idx < 0) {
-            continue;
-        } else if (idx >= NUM_LEDS) {
+    //return;
+    for (uint16_t i = spot.pos - spot.radius;
+         i <= spot.pos + spot.radius;
+         ++i) {        
+        if (i >= NUM_LEDS) {
             continue;
         }
         
+        
 #if false
+        // this was an attempt to utilize chroma to achieve cool effets;
+        // didn't work that great when white color was active...
         CHSV hsv = rgb2hsv_approximate(leds[(size_t)idx]);
         hsv.hue += spot.hueDeltaMax * ((uint16_t)(spot.radius - abs(i)) * 255)/spot.radius/256; 
         CRGB rgb;
         hsv2rgb_raw(hsv, rgb);
-#endif
         CRGB rgb = leds[(size_t)idx];
         rgb.g = 255;
-        leds[(size_t)idx] = CRGB::Blue;//rgb;
+        leds[(size_t)idx] = CRGB::Blue;
+#endif
 
-        //hsv2rgb_spectrum(color, leds[(size_t)idx]);
-        //ds[(size_t)idx] = CRGB::Blue;
+        // lets do some ratio math without using any of the real number types...
+        uint8_t dist = i < spot.pos ? spot.pos - i : i - spot.pos;
+        uint8_t distanceFactor = 255 - (uint16_t)dist * 255 / spot.radius;
+        leds[i] = leds[i].lerp8(spot.color, distanceFactor);
+        //leds[i] = spot.color.lerp8(leds[i], distanceFactor);
+        //uint8_t distanceFactor = 255;
+        //leds[(size_t)idx] = CRGB(distanceFactor, 0, 0);
+        //leds[abs(idx)] = CRGB::Green;
+        //return;
+        //leds[i] = CRGB(distanceFactor, 0, 0);
     }
 }
 
