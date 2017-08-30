@@ -82,8 +82,8 @@ bool doGlitter = false;
 #define MAX_COLOR_SPOTS 5
 struct SpotInfo
 {
-    int16_t pos;
-    int16_t radius;
+    uint16_t pos;
+    uint16_t radius;
     int16_t vel;   
     CRGB color;
     uint8_t fadeFactor;
@@ -99,7 +99,7 @@ void addSpot()
     
     // test a hue spot
     SpotInfo spot;
-    spot.pos = 10;
+    spot.pos = 6;
     spot.vel = 1;
     spot.radius = 7;
     spot.color = CRGB::Red;
@@ -222,12 +222,14 @@ void loop()
       }
   }
 
-  EVERY_N_MILLISECONDS(577) {
+  EVERY_N_MILLISECONDS(50) {
       // hue spots
       for (size_t i = 0; i < numColorSpots; ++i) {
           SpotInfo &si = gColorSpots[i];
           si.pos += si.vel * GRAD_SCALE_FACTOR;
-          if (si.pos < 0 || si.pos >= NUM_LEDS) {
+          if (si.pos >= NUM_LEDS || si.pos < 0) {
+              // turn around !
+              si.pos = si.pos - si.vel;
               si.vel = -si.vel;
           }
       }
@@ -256,14 +258,17 @@ void addGlitter(fract8 chanceOfGlitter)
 
 void applySpot(const SpotInfo &spot)
 {
-    //return;
-    for (uint16_t i = spot.pos - spot.radius;
-         i <= spot.pos + spot.radius;
-         ++i) {        
-        if (i >= NUM_LEDS) {
-            continue;
-        }
-        
+    uint16_t start = (spot.radius > spot.pos) ? 0 : (spot.pos - spot.radius);
+    uint16_t end = spot.pos + spot.radius;
+    if (end >= NUM_LEDS) {
+        end = NUM_LEDS - 1;
+    }
+    for (uint16_t i = start; i <= end; ++i) {
+        // lets do some ratio math without using any of the real number types...
+        uint8_t dist = i < spot.pos ? (spot.pos - i) : (i - spot.pos);
+        uint8_t distanceFactor = 255 - (uint16_t)dist * 255 / spot.radius;
+        leds[i] = leds[i].lerp8(spot.color, distanceFactor);
+    }        
         
 #if false
         // this was an attempt to utilize chroma to achieve cool effets;
@@ -277,17 +282,12 @@ void applySpot(const SpotInfo &spot)
         leds[(size_t)idx] = CRGB::Blue;
 #endif
 
-        // lets do some ratio math without using any of the real number types...
-        uint8_t dist = i < spot.pos ? spot.pos - i : i - spot.pos;
-        uint8_t distanceFactor = 255 - (uint16_t)dist * 255 / spot.radius;
-        leds[i] = leds[i].lerp8(spot.color, distanceFactor);
         //leds[i] = spot.color.lerp8(leds[i], distanceFactor);
         //uint8_t distanceFactor = 255;
         //leds[(size_t)idx] = CRGB(distanceFactor, 0, 0);
         //leds[abs(idx)] = CRGB::Green;
         //return;
         //leds[i] = CRGB(distanceFactor, 0, 0);
-    }
 }
 
 void addRgb(size_t i, CRGB rgb, uint8_t fadeFactor)
