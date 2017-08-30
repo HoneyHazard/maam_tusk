@@ -87,6 +87,7 @@ struct SpotInfo
     int16_t vel;   
     CRGB color;
     uint8_t fadeFactor;
+    int8_t fadeDelta;
 } gColorSpots[MAX_COLOR_SPOTS];
 uint8_t numColorSpots = 0;
 
@@ -100,15 +101,16 @@ void addSpot()
     // test a hue spot
     SpotInfo spot;
     spot.pos = 6;
-    spot.vel = 1;
+    spot.vel = 3;
     spot.radius = 7;
     spot.color = CRGB::Red;
-    spot.fadeFactor = 0;
+    spot.fadeDelta= +1;
+    spot.fadeFactor = 250;
     gColorSpots[numColorSpots] = spot;
     ++numColorSpots;
 }
 
-void removeColorSpot(uint8_t index)
+void removeSpot(uint8_t index)
 {
     --numColorSpots;
     // shift all left...
@@ -226,12 +228,29 @@ void loop()
       // hue spots
       for (size_t i = 0; i < numColorSpots; ++i) {
           SpotInfo &si = gColorSpots[i];
-          si.pos += si.vel * GRAD_SCALE_FACTOR;
-          if (si.pos >= NUM_LEDS || si.pos < 0) {
-              // turn around !
-              si.pos = si.pos - si.vel;
+          if (si.fadeDelta > 0
+         && ((si.pos <= 0 && si.vel < 0) || (si.pos >= NUM_LEDS && si.vel > 0))) {
+              // spot about to rebounce, or escape...
               si.vel = -si.vel;
+              //if (random8() < 128) {
+                  // turn around before it's too late!
+                  //si.vel = -si.vel;
+              //} else {
+                  // nothing lasts forever...
+                  //si.fadeDelta = -si.fadeDelta;
+              //}
           }
+
+          if (si.fadeDelta < 0) {
+              if (si.fadeFactor < -si.fadeDelta) {
+                  removeSpot(i);
+                  --i;
+              }
+          } else if (si.fadeFactor < 255 - si.fadeDelta) {
+              si.fadeFactor += si.fadeDelta;
+          }
+          
+          si.pos += si.vel * GRAD_SCALE_FACTOR;
       }
   }
 
@@ -267,7 +286,8 @@ void applySpot(const SpotInfo &spot)
         // lets do some ratio math without using any of the real number types...
         uint8_t dist = i < spot.pos ? (spot.pos - i) : (i - spot.pos);
         uint8_t distanceFactor = 255 - (uint16_t)dist * 255 / spot.radius;
-        leds[i] = leds[i].lerp8(spot.color, distanceFactor);
+        uint8_t finalFactor = lerp8by8(0, distanceFactor, spot.fadeFactor);
+        leds[i] = leds[i].lerp8(spot.color, finalFactor);
     }        
         
 #if false
@@ -365,26 +385,26 @@ void rainbow()
 
 void rainbowWithGlitter() 
 {
-  // built-in FastLED rainbow, plus some random sparkly glitter
-  rainbow();
-  addGlitter(80);
+    // built-in FastLED rainbow, plus some random sparkly glitter
+    rainbow();
+    addGlitter(80);
 }
 
 
 void confetti() 
 {
-  // random colored speckles that blink in and fade smoothly
-  fadeToBlackBy( leds, NUM_LEDS, 10);
-  int pos = random16(NUM_LEDS);
-  leds[pos] += CHSV( gHue + random8(64), 200, 255);
+    // random colored speckles that blink in and fade smoothly
+    fadeToBlackBy( leds, NUM_LEDS, 10);
+    int pos = random16(NUM_LEDS);
+    leds[pos] += CHSV( gHue + random8(64), 200, 255);
 }
 
 void sinelon()
 {
-  // a colored dot sweeping back and forth, with fading trails
-  fadeToBlackBy( leds, NUM_LEDS, 20);
-  int pos = beatsin16( 13, 0, NUM_LEDS-1 );
-  leds[pos] += CHSV( gHue, 255, 192);
+    // a colored dot sweeping back and forth, with fading trails
+    fadeToBlackBy( leds, NUM_LEDS, 20);
+    int pos = beatsin16( 13, 0, NUM_LEDS-1 );
+    leds[pos] += CHSV( gHue, 255, 192);
 }
 
 void bpm()
