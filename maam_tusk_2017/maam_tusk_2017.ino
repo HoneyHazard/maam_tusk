@@ -4,7 +4,7 @@
 #define TESTING
 // *** uncomment above when running on Ma'aM ***
 
-#define NEEDS_GREEN_BLUE_GRADIENT_SWAP
+//#define NEEDS_GREEN_BLUE_GRADIENT_SWAP
 
 FASTLED_USING_NAMESPACE
 
@@ -36,7 +36,7 @@ FASTLED_USING_NAMESPACE
 // Sergey's setup for testing
 #define DATA_PIN    3
 #define LED_TYPE    WS2811
-#define COLOR_ORDER RGB
+#define COLOR_ORDER RBG
 #define NUM_LEDS    49
 
 #define BRIGHTNESS  10
@@ -48,6 +48,7 @@ FASTLED_USING_NAMESPACE
 
 // *** Ma'aM Colors Stuff ***
 CRGB maamColors[] = { CRGB::Blue, CRGB::Purple, CRGB::Pink, CRGB::White, CRGB::Cyan };
+CRGB spotColors[] = { CRGB::Red, CRGB::Yellow, CRGB::Lime };
 //CRGB maamColors[] = { CRGB::Blue, CRGB::Red, CRGB::Green }; // good for testing.
 const size_t numMaamColors = ARRAY_SIZE(maamColors);
 const size_t colorArrayLen = GRAD_LENGTH * numMaamColors; 
@@ -100,12 +101,15 @@ void addSpot()
     
     // test a hue spot
     SpotInfo spot;
-    spot.pos = 6;
-    spot.vel = 3;
-    spot.radius = 7;
-    spot.color = CRGB::Red;
-    spot.fadeDelta= +1;
-    spot.fadeFactor = 250;
+    spot.pos = random16() % NUM_LEDS;
+    spot.vel = random8() % 2 + 1;
+    if (spot.pos > NUM_LEDS/2) {
+        spot.vel = -spot.vel;
+    }
+    spot.radius = random8() % 7;
+    spot.color = spotColors[ random16() % ARRAY_SIZE(spotColors) ];
+    spot.fadeDelta= +3 + random8() % 2;
+    spot.fadeFactor = 0;
     gColorSpots[numColorSpots] = spot;
     ++numColorSpots;
 }
@@ -157,8 +161,6 @@ void setup()
 
     // set master brightness control
     FastLED.setBrightness(BRIGHTNESS);
-
-    addSpot();
 }
 
 
@@ -231,14 +233,14 @@ void loop()
           if (si.fadeDelta > 0
          && ((si.pos <= 0 && si.vel < 0) || (si.pos >= NUM_LEDS && si.vel > 0))) {
               // spot about to rebounce, or escape...
-              si.vel = -si.vel;
-              //if (random8() < 128) {
+              //si.vel = -si.vel;
+              if (random8() < 128) {
                   // turn around before it's too late!
-                  //si.vel = -si.vel;
-              //} else {
+                  si.vel = -si.vel;
+              } else {
                   // nothing lasts forever...
-                  //si.fadeDelta = -si.fadeDelta;
-              //}
+                  si.fadeDelta = -si.fadeDelta;
+              }
           }
 
           if (si.fadeDelta < 0) {
@@ -258,6 +260,13 @@ void loop()
   EVERY_N_SECONDS(11) {
       if (random8() < 128) {
           transitionActive = true;
+      }
+  }
+
+  EVERY_N_SECONDS(5) {
+      //if (random() < 60) {
+      {
+          addSpot();
       }
   }
 
