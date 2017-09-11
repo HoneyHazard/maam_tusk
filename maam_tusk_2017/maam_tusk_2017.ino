@@ -312,25 +312,6 @@ void applySpot(const SpotInfo &spot)
         uint8_t finalFactor = lerp8by8(0, distanceFactor, spot.fadeFactor);
         leds[i] = leds[i].lerp8(spot.color, finalFactor);
     }        
-        
-#if false
-        // this was an attempt to utilize chroma to achieve cool effets;
-        // didn't work that great when white color was active...
-        CHSV hsv = rgb2hsv_approximate(leds[(size_t)idx]);
-        hsv.hue += spot.hueDeltaMax * ((uint16_t)(spot.radius - abs(i)) * 255)/spot.radius/256; 
-        CRGB rgb;
-        hsv2rgb_raw(hsv, rgb);
-        CRGB rgb = leds[(size_t)idx];
-        rgb.g = 255;
-        leds[(size_t)idx] = CRGB::Blue;
-#endif
-
-        //leds[i] = spot.color.lerp8(leds[i], distanceFactor);
-        //uint8_t distanceFactor = 255;
-        //leds[(size_t)idx] = CRGB(distanceFactor, 0, 0);
-        //leds[abs(idx)] = CRGB::Green;
-        //return;
-        //leds[i] = CRGB(distanceFactor, 0, 0);
 }
 
 void addRgb(size_t i, CRGB rgb, uint8_t fadeFactor)
