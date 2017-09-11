@@ -93,9 +93,9 @@ struct SpotInfo
 uint8_t numColorSpots = 0;
 
 void addSpot()
-{
-    if (numColorSpots > MAX_COLOR_SPOTS) {
-        // cannot handle any more color spots ;_;
+{    
+    if (numColorSpots >= MAX_COLOR_SPOTS) {
+        Serial.println("too many spots... :(");
         return;
     }
     
@@ -108,16 +108,26 @@ void addSpot()
     }
     spot.radius = random8() % 7;
     spot.color = spotColors[ random16() % ARRAY_SIZE(spotColors) ];
-    spot.fadeDelta= +3 + random8() % 2;
+    spot.fadeDelta= +10 + random8() % 2;
     spot.fadeFactor = 0;
     gColorSpots[numColorSpots] = spot;
     ++numColorSpots;
+
+    Serial.print("spot added.... there are ");
+    Serial.print(numColorSpots);
+    Serial.println(" spots");
 }
 
 void removeSpot(uint8_t index)
 {
     --numColorSpots;
     // shift all left...
+
+    Serial.print("Removing spot at idx ");
+    Serial.print(index);
+    Serial.print("; there are ");
+    Serial.print(numColorSpots);
+    Serial.println(" color spots");
     
     for (uint8_t i = index; i < numColorSpots; ++i) {
         gColorSpots[i] = gColorSpots[i+1];
@@ -129,6 +139,10 @@ CRGB leds[NUM_LEDS];
 
 void setup()
 {
+    Serial.begin(9600);
+    Serial.println("hello world");
+        
+    
     maamColorArray = new CRGB[colorArrayLen];
     for (uint16_t i = 0; i < numMaamColors; ++i) {
         uint16_t iNext = i + 1;
