@@ -245,25 +245,40 @@ void loop()
       for (size_t i = 0; i < numColorSpots; ++i) {
           SpotInfo &si = gColorSpots[i];
           if (si.fadeDelta > 0
-         && ((si.pos <= 0 && si.vel < 0) || (si.pos >= NUM_LEDS && si.vel > 0))) {
+         && ((si.pos <= 0 && si.vel < 0) || (si.pos >= NUM_LEDS-1 && si.vel > 0))) {
               // spot about to rebounce, or escape...
-              //si.vel = -si.vel;
               if (random8() < 128) {
                   // turn around before it's too late!
                   si.vel = -si.vel;
+                  
+                  Serial.print("spot ");
+                  Serial.print(i);
+                  Serial.println(" rebounding");
+                  
               } else {
                   // nothing lasts forever...
                   si.fadeDelta = -si.fadeDelta;
+
+                  Serial.print("spot ");
+                  Serial.print(i);
+                  Serial.println(" fading away...");
               }
           }
 
-          if (si.fadeDelta < 0) {
+          if (si.fadeDelta < 0) {             
               if (si.fadeFactor < -si.fadeDelta) {
                   removeSpot(i);
                   --i;
+              } else {
+                  si.fadeFactor += si.fadeDelta;
               }
-          } else if (si.fadeFactor < 255 - si.fadeDelta) {
-              si.fadeFactor += si.fadeDelta;
+          } else {
+              // si.fadeDelta >= 0              
+              if (si.fadeFactor >= 255 - si.fadeDelta) {
+                  si.fadeFactor = 255; // max out...
+              } else {                  
+                  si.fadeFactor += si.fadeDelta;
+              }
           }
           
           si.pos += si.vel * GRAD_SCALE_FACTOR;
@@ -278,8 +293,7 @@ void loop()
   }
 
   EVERY_N_SECONDS(5) {
-      //if (random() < 60) {
-      {
+      if (random8() < 60) {
           addSpot();
       }
   }
@@ -287,6 +301,9 @@ void loop()
   // activate glitter every now and then
   EVERY_N_SECONDS(13) {
       doGlitter = (random8() < 100);
+      if (doGlitter) {
+          Serial.println("glitter time!");
+      }
   }
 
 }
