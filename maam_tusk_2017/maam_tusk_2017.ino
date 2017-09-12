@@ -39,7 +39,7 @@ FASTLED_USING_NAMESPACE
 #define COLOR_ORDER RBG
 #define NUM_LEDS    49
 
-#define BRIGHTNESS  10
+#define BRIGHTNESS  5
 #define GRAD_SCALE_FACTOR 1
 
 #endif // TESTING
@@ -292,8 +292,8 @@ void loop()
       }
   }
 
-  EVERY_N_SECONDS(5) {
-      if (random8() < 60) {
+  EVERY_N_SECONDS(3) {
+      if (random8() < 100) {
           addSpot();
       }
   }
